@@ -1,53 +1,70 @@
-const db = require('../data/dbConfig.js')
+const knex = require("knex")
+const db = require("../data/config")
 
 module.exports = {
-  find,
-  findById,
-  add,
-  remove,
-  update,
-  findHubMessages
-};
+	find,
+	findById,
+	add,
+	remove,
+	update,
+	findHubMessages,
+	findHubMessageById,
+	addHubMessage,
+}
 
-function find(query) {
-  let { page = 1, limit = 5, sortby = 'id', sortdir = 'asc' } = query;
-  const offset = limit * (page - 1);
+function find(query = {}) {
+	const { page = 1, limit = 100, sortBy = "id", sortDir = "asc" } = query
+	const offset = limit * (page - 1)
 
-  let rows = db('hubs')
-    .orderBy(sortby, sortdir)
-    .limit(limit)
-    .offset(offset);
-
-  return rows;
+	return db("hubs")
+		.orderBy(sortBy, sortDir)
+		.limit(limit)
+		.offset(offset)
+		.select()
 }
 
 function findById(id) {
-  return db('hubs')
-    .where({ id })
-    .first();
+	return db("hubs")
+		.where({ id })
+		.first()
 }
 
 async function add(hub) {
-  const [id] = await db('hubs').insert(hub);
+	const [id] = await db("hubs").insert(hub)
 
-  return findById(id);
+	return findById(id)
 }
 
 function remove(id) {
-  return db('hubs')
-    .where({ id })
-    .del();
+	return db("hubs")
+		.where({ id })
+		.del()
 }
 
-function update(id, changes) {
-  return db('hubs')
-    .where({ id })
-    .update(changes, '*');
+async function update(id, changes) {
+	await db("hubs")
+		.where({ id })
+		.update(changes)
+
+	return findById(id)
 }
 
 function findHubMessages(hubId) {
-  return db('messages as m')
-    .join('hubs as h', 'm.hub_id', 'h.id')
-    .select('m.id', 'm.text', 'm.sender', 'h.id as hubId', 'h.name as hub')
-    .where({ hub_id: hubId });
+	return db("messages as m")
+		.join("hubs as h", "m.hub_id", "h.id")
+		.where({ hub_id: hubId })
+		.select(["m.id", "m.text", "m.sender", "h.id as hubId", "h.name as hub"])
+}
+
+function findHubMessageById(hubId, id) {
+	return db("messages")
+		.where({ id, hub_id: hubId })
+		.first()
+}
+
+async function addHubMessage(hubId, message) {
+	const data = { hub_id: hubId, ...message }
+	const [id] = await db("messages").insert(data)
+
+	return findHubMessageById(hubId, id)
 }

@@ -1,126 +1,177 @@
-const express = require('express');
+const express = require("express")
+const hubs = require("./hubs-model")
 
-const Hubs = require('./hubs-model.js');
-const Messages = require('../messages/messages-model.js');
+const router = express.Router()
 
-const router = express.Router();
+// This handles the route /api/hubs
+// We no longer have to define the route prefix,
+// since it's defined when attaching to the main router in `index.js`
+router.get("/", (req, res) => {
+	// query strings allow us to pass generic key/values not specific to the resource.
+	// they are part of the URL, everything after the question mark (?).
+	// e.g. /api/hubs?sortBy=name&limit=5
+	const opts ={
+		sortBy: req.query.sortBy,
+		limit: req.query.limit,
+	}
 
-// this only runs if the url has /api/hubs in it
-router.get('/', (req, res) => {
-  Hubs.find(req.query)
-  .then(hubs => {
-    res.status(200).json(hubs);
-  })
-  .catch(error => {
-    // log error to server
-    console.log(error);
-    res.status(500).json({
-      message: 'Error retrieving the hubs',
-    });
-  });
-});
+	hubs.find(opts)
+		.then((hubs) => {
+			res.status(200).json(hubs)
+		})
+		.catch((error) => {
+			console.log(error)
+			res.status(500).json({
+				message: "Error retrieving the hubs",
+			})
+		})
+})
 
-// /api/hubs/:id
+// This handles the route /api/hubs/:id
+router.get("/:id", (req, res) => {
+	hubs.findById(req.params.id)
+		.then((hub) => {
+			// make sure the hub actually exists before we try to return it
+			if (hub) {
+				res.status(200).json(hub)
+			} else {
+				res.status(404).json({
+					message: "Hub not found",
+				})
+			}
+		})
+		.catch((error) => {
+			console.log(error)
+			res.status(500).json({
+				message: "Error retrieving the hub",
+			})
+		})
+})
 
-router.get('/:id', (req, res) => {
-  Hubs.findById(req.params.id)
-  .then(hub => {
-    if (hub) {
-      res.status(200).json(hub);
-    } else {
-      res.status(404).json({ message: 'Hub not found' });
-    }
-  })
-  .catch(error => {
-    // log error to server
-    console.log(error);
-    res.status(500).json({
-      message: 'Error retrieving the hub',
-    });
-  });
-});
+// This handles POST /api/hubs
+router.post("/", (req, res) => {
+	if (!req.body.name) {
+		return res.status(400).json({
+			message: "Missing hub name",
+		})
+	}
 
-router.post('/', (req, res) => {
-  Hubs.add(req.body)
-  .then(hub => {
-    res.status(201).json(hub);
-  })
-  .catch(error => {
-    // log error to server
-    console.log(error);
-    res.status(500).json({
-      message: 'Error adding the hub',
-    });
-  });
-});
+	hubs.add(req.body)
+		.then((hub) => {
+			res.status(201).json(hub)
+		})
+		.catch((error) => {
+			console.log(error)
+			res.status(500).json({
+				message: "Error adding the hub",
+			})
+		})
+})
 
-router.delete('/:id', (req, res) => {
-  Hubs.remove(req.params.id)
-  .then(count => {
-    if (count > 0) {
-      res.status(200).json({ message: 'The hub has been nuked' });
-    } else {
-      res.status(404).json({ message: 'The hub could not be found' });
-    }
-  })
-  .catch(error => {
-    // log error to server
-    console.log(error);
-    res.status(500).json({
-      message: 'Error removing the hub',
-    });
-  });
-});
+// This handles PUT /api/hubs/:id
+router.put("/:id", (req, res) => {
+	if (!req.body.name) {
+		return res.status(400).json({
+			message: "Missing hub name",
+		})
+	}
 
-router.put('/:id', (req, res) => {
-  Hubs.update(req.params.id, req.body)
-  .then(hub => {
-    if (hub) {
-      res.status(200).json(hub);
-    } else {
-      res.status(404).json({ message: 'The hub could not be found' });
-    }
-  })
-  .catch(error => {
-    // log error to server
-    console.log(error);
-    res.status(500).json({
-      message: 'Error updating the hub',
-    });
-  });
-});
+	hubs.update(req.params.id, req.body)
+		.then((hub) => {
+			if (hub) {
+				res.status(200).json(hub)
+			} else {
+				res.status(404).json({
+					message: "The hub could not be found",
+				})
+			}
+		})
+		.catch((error) => {
+			console.log(error)
+			res.status(500).json({
+				message: "Error updating the hub",
+			})
+		})
+})
 
-// add an endpoint that returns all the messages for a hub
-// this is a sub-route or sub-resource
-router.get('/:id/messages', (req, res) => {
-  Hubs.findHubMessages(req.params.id)
-  .then(messages => {
-    res.status(200).json(messages);
-  })
-  .catch (error => {
-    // log error to server
-    console.log(error);
-    res.status(500).json({
-      message: 'Error getting the messages for the hub',
-    });
-  });
-});
+// This handles DELETE /api/hubs/:id
+router.delete("/:id", (req, res) => {
+	hubs.remove(req.params.id)
+		.then((count) => {
+			if (count > 0) {
+				res.status(200).json({
+					message: "The hub has been nuked",
+				})
+			} else {
+				res.status(404).json({
+					message: "The hub could not be found",
+				})
+			}
+		})
+		.catch((error) => {
+			console.log(error)
+			res.status(500).json({
+				message: "Error removing the hub",
+			})
+		})
+})
 
-// add an endpoint for adding new message to a hub
-router.post('/:id/messages', (req, res) => {
-  const messageInfo = { ...req.body, hub_id: req.params.id };
+// This handles GET /api/hubs/:id/messages
+router.get("/:id/messages", (req, res) => {
+	hubs.findHubMessages(req.params.id)
+		.then((messages) => {
+			res.status(200).json(messages)
+			// or just res.json(messages) since express defaults to a 200
+		})
+		.catch((error) => {
+			console.log(error)
+			res.status(500).json({
+				message: "Could not get hub messages",
+			})
+		})
+})
 
-  Messages.add(messageInfo)
-  .then(message => {
-    res.status(210).json(message);
-  })
-  .catch(error => {
-    // log error to server
-    console.log(error);
-    res.status(500).json({
-      message: 'Error getting the messages for the hub',
-    });
-  });
-});
+// This handles GET /api/hubs/:id/messages/:messageID
+router.get("/:hubId/messages/:messageId", (req, res) => {
+	hubs.findHubMessageById(req.params.hubId, req.params.messageId)
+		.then((message) => {
+			if (message) {
+				res.json(message)
+			} else {
+				res.status(404).json({
+					message: "Message was not found",
+				})
+			}
+		})
+		.catch((error) => {
+			console.log(error)
+			res.status(500).json({
+				message: "Could not get hub message",
+			})
+		})
+})
 
-module.exports = router;
+// This handles POST /api/hubs/:id/messages
+router.post("/:id/messages", (req, res) => {
+	const { sender, text } = req.body
+	if (!sender || !text) {
+		// the easiest way to end a request early if we know something is wrong,
+		// is to just return. Javascript doesn't run anything in the function after returning.
+		return res.status(400).json({
+			message: "Need sender and text values",
+		})
+	}
+
+	hubs.addHubMessage(req.params.id, req.body)
+		.then((newMessage) => {
+			res.status(201).json(newMessage)
+		})
+		.catch((error) => {
+			console.log(error)
+			res.status(500).json({
+				message: "Could not create hub message",
+			})
+		})
+})
+
+module.exports = router
