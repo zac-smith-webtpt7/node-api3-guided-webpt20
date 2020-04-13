@@ -1,4 +1,4 @@
-# Node API 3 Guided Project
+# Express Middleware
 
 Guided project for **Node API 3** module.
 
