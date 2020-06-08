@@ -5,11 +5,12 @@
 		"start": "node index.js"
 	},
 	"devDependencies": {
-		"nodemon": "^2.0.2"
+		"nodemon": "2.0.4"
 	},
 	"dependencies": {
 		"express": "^4.17.1",
-		"knex": "^0.20.13",
-		"sqlite3": "^4.1.1"
+		"knex": "0.21.1",
+		"morgan": "^1.10.0",
+		"sqlite3": "4.2.0"
 	}
 }

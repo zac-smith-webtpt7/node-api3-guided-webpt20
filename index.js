@@ -7,8 +7,8 @@ const port = 4000
 
 server.use(express.json())
 
-server.use("/", welcomeRouter)
-server.use("/users", usersRouter)
+server.use(welcomeRouter)
+server.use(usersRouter)
 
 server.listen(port, () => {
 	console.log(`Server running at http://localhost:${port}`)

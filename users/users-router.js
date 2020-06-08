@@ -3,8 +3,7 @@ const users = require("./users-model")
 
 const router = express.Router()
 
-// This handles the route `GET /users`
-router.get("/", (req, res) => {
+router.get("/users", (req, res) => {
 	// these options are supported by the `users.find` method,
 	// so we get them from the query string and pass them through.
 	const options = {
@@ -26,8 +25,7 @@ router.get("/", (req, res) => {
 		})
 })
 
-// This handles the route `GET /users/:id`
-router.get("/:id", (req, res) => {
+router.get("/users/:id", (req, res) => {
 	users.findById(req.params.id)
 		.then((user) => {
 			if (user) {
@@ -46,8 +44,7 @@ router.get("/:id", (req, res) => {
 		})
 })
 
-// This handles the route `POST /users`
-router.post("/", (req, res) => {
+router.post("/users", (req, res) => {
 	if (!req.body.name || !req.body.email) {
 		return res.status(400).json({
 			message: "Missing user name or email",
@@ -66,8 +63,7 @@ router.post("/", (req, res) => {
 		})
 })
 
-// This handles the route `PUT /users/:id`
-router.put("/:id", (req, res) => {
+router.put("/users/:id", (req, res) => {
 	if (!req.body.name || !req.body.email) {
 		return res.status(400).json({
 			message: "Missing user name or email",
@@ -92,8 +88,7 @@ router.put("/:id", (req, res) => {
 		})
 })
 
-// This handles the route `DELETE /users/:id`
-router.delete("/:id", (req, res) => {
+router.delete("/users/:id", (req, res) => {
 	users.remove(req.params.id)
 		.then((count) => {
 			if (count > 0) {
@@ -117,7 +112,7 @@ router.delete("/:id", (req, res) => {
 // Since posts in this case is a sub-resource of the user resource,
 // include it as a sub-route. If you list all of a users posts, you
 // don't want to see posts from another user.
-router.get("/:id/posts", (req, res) => {
+router.get("/users/:id/posts", (req, res) => {
 	users.findUserPosts(req.params.id)
 		.then((posts) => {
 			res.status(200).json(posts)
@@ -133,7 +128,7 @@ router.get("/:id/posts", (req, res) => {
 // Since we're now dealing with two IDs, a user ID and a post ID,
 // we have to switch up the URL parameter names.
 // id === user ID and postId === post ID
-router.get("/:id/posts/:postId", (req, res) => {
+router.get("/users/:id/posts/:postId", (req, res) => {
 	users.findUserPostById(req.params.id, req.params.postId)
 		.then((post) => {
 			if (post) {
@@ -152,7 +147,7 @@ router.get("/:id/posts/:postId", (req, res) => {
 		})
 })
 
-router.post("/:id/posts", (req, res) => {
+router.post("/users/:id/posts", (req, res) => {
 	if (!req.body.text) {
 		// Make sure you have a return statement, otherwise the
 		// function will continue running and you'll see ERR_HTTP_HEADERS_SENT
